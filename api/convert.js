@@ -1,9 +1,9 @@
 // api/convert.js
-import ytdl from "ytdl-core";
+const ytdl = require("ytdl-core");
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   try {
-    const url = req.query.url || req.body?.url;
+    const url = (req.query && req.query.url) || (req.body && req.body.url);
     if (!url) {
       return res.status(400).json({ ok: false, error: "Missing ?url=<youtube_link>" });
     }
@@ -13,25 +13,24 @@ export default async function handler(req, res) {
 
     const info = await ytdl.getInfo(url);
 
-    // Ищем формат с видео+аудио в контейнере mp4
+    // Ищем формат с видео+аудио в mp4, иначе любой формат с видео+аудио
     const fmt =
       info.formats.find(f => f.hasVideo && f.hasAudio && f.container === "mp4" && f.url) ||
       info.formats.find(f => f.hasVideo && f.hasAudio && f.url);
 
-    if (!fmt?.url) {
-      return res.status(404).json({ ok: false, error: "No downloadable mp4 found" });
+    if (!fmt || !fmt.url) {
+      return res.status(404).json({ ok: false, error: "No downloadable video URL found" });
     }
 
-    // Это прямой временный URL YouTube (подходит для скачивания сторонним сервисом)
     return res.status(200).json({
       ok: true,
       mp4Url: fmt.url,
       contentLength: fmt.contentLength || null,
-      itag: fmt.itag,
+      itag: fmt.itag || null,
       mimeType: fmt.mimeType || null
     });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ ok: false, error: "Conversion failed" });
   }
-}
+};
