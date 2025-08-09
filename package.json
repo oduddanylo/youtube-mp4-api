@@ -1,7 +1,7 @@
 {
   "name": "youtube-mp4-api",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
   "dependencies": {
     "ytdl-core": "^4.11.5"
   }
